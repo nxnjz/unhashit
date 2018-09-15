@@ -44,24 +44,29 @@ def md5_check(md5hash):
        result = md5hash + " : notfound"
    print(result)
 
-print("This script uses APIs on nitrxgen.net and hashes.org. Do NOT use for illegal purposes\n")
-print("\n1. Nitrxgen.net (MD5 only, unlimited requests)")
-print("\n2. Hashes.org (API key required, 100 requests per 5 minutes allowed)")
-api_choice = input("\n\n Choose: ")
-
-if api_choice == '1':
-    filename = input("Enter filename (one MD5 hash per line): ")
-    with open(filename) as md5_file:
-        for line in md5_file:
-            md5_check(line.strip())
-elif api_choice == '2':
-    key_mng()
-    filename = input("Enter filename (one hash per line): ")
-    with open(filename) as multi_file:
-        for line in multi_file:
-            multi_check(apikey, line.strip())
 
 
-else: print("Choice not recognized, exiting.")
+exit_script = 'n'
+while exit_script == 'n':
+    print("This script uses APIs on nitrxgen.net and hashes.org. Do NOT use for illegal purposes\n")
+    print("\n1. Nitrxgen.net (MD5 only, unlimited requests)")
+    print("\n2. Hashes.org (API key required, 100 requests per 5 minutes allowed)")
+    api_choice = input("\n\nChoose: ")
 
+    if api_choice == '1':
+        filename = input("Enter filename (one MD5 hash per line): ")
+        with open(filename) as md5_file:
+            for line in md5_file:
+                md5_check(line.strip())
+    elif api_choice == '2':
+        key_mng()
+        filename = input("Enter filename (one hash per line): ")
+        with open(filename) as multi_file:
+            for line in multi_file:
+                multi_check(apikey, line.strip())
+
+
+    else: print("\nChoice not recognized")
+
+    exit_script = input("\n\nExit now? [Y/n]")
 
