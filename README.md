@@ -10,7 +10,7 @@ Simple Python 3 Script to query APIs on nitrxgen.net and hashes.org
 
 hash : plain-text-value : algorithm (if found)
 
-hash : "notfound" (if not found
+hash : "notfound" (if not found)
 
 #### Usage:
 
