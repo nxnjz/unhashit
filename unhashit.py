@@ -4,23 +4,39 @@
 
 import os
 import requests
+import argparse
 
 
 def key_mng():
+    global apikey
     try:
-        global apikey
-        apikey_file = open("hashes.org-api.key",)
-        apikey = apikey_file.read()
+        with open(argus.key) as key_file:
+            apikey = key_file.read()
+            print("Reading key from", argus.key)
     except FileNotFoundError:
-        apikey = input("The file 'hashes.org-api.key' containing the api key was not found, enter your api key: ")
-        savefile = input("\nWould you like to store this key in a file to avoid entering it every time? (y/n): ")
-        if savefile == 'y':
-            with open("hashes.org-api.key", "w") as apikey_file :
-                apikey_file.write(apikey)
-                os.chmod("hashes.org-api.key", 0o600)
-                print("\nYour key was written to hashes.org-api.key, permissions set to rw------- (owner read/write, group nothing, others nothing)")
+        apikey = argus.key
+    except TypeError:
+        print("API key is required for hashes.org")
+        exit()
 
-def multi_check(apikey, multi_hash):
+def save_out(line):
+    try:
+        with open(argus.output) as out_file:
+            out_file.write(line)
+    except TypeError:
+        pass
+
+def nitrxgen_check(md5hash):
+    apiurl = "http://www.nitrxgen.net/md5db/" + str(md5hash)
+    r = requests.get(apiurl)
+    if r.text != "":
+        result = md5hash + " : " + r.text + " : MD5"
+    else:
+        result = md5hash + " : notfound"
+    print(result)
+    save_out(result)
+
+def hashesorg_check(apikey, multi_hash):
     apiurl = "https://hashes.org/api.php?key=" + apikey + "&query=" + multi_hash
     rr = requests.get(apiurl)
     if rr.json()['status'] == 'success':
@@ -31,42 +47,24 @@ def multi_check(apikey, multi_hash):
         except TypeError:
             result = multi_hash + " : notfound"
         print(result)
+        save_out(result)
     else:
-        print("Error querying the hashes.org API, you may have overused it in a short period of time. ")
+        print("Error querying the hashes.org API, you may have overused it in a short period of time, or you key is invalid")
 
 
-def md5_check(md5hash):
-   apiurl = "http://www.nitrxgen.net/md5db/" + str(md5hash)
-   r = requests.get(apiurl)
-   if r.text != "":
-       result = md5hash + " : " + r.text + " : MD5"
-   else:
-       result = md5hash + " : notfound"
-   print(result)
+prsr = argparse.ArgumentParser(description="This script automates lookup of hashes by using the APIs on nitrxgen.net and hashes.org")
+prsr.add_argument('-a','--api',required=True,help='nitrxgen.net (MD5 only) or hashes.org')
+prsr.add_argument('-i','--input',required=True,help='List of hashes, one per line.')
+prsr.add_argument('-o','--output',help='Choose an output file if you want to save the results')
+prsr.add_argument('-k','--key',help='API key for hashes.org')
 
+argus = prsr.parse_args()
 
-
-exit_script = 'n'
-while exit_script == 'n':
-    print("This script uses APIs on nitrxgen.net and hashes.org. Do NOT use for illegal purposes\n")
-    print("\n1. Nitrxgen.net (MD5 only, unlimited requests)")
-    print("\n2. Hashes.org (API key required, 100 requests per 5 minutes allowed)")
-    api_choice = input("\n\nChoose: ")
-
-    if api_choice == '1':
-        filename = input("Enter filename (one MD5 hash per line): ")
-        with open(filename) as md5_file:
-            for line in md5_file:
-                md5_check(line.strip())
-    elif api_choice == '2':
+with open(argus.input) as hashfile:
+    if argus.api == 'nitrxgen.net':
+        for line in hashfile:
+            nitrxgen_check(line.strip())
+    elif argus.api == 'hashes.org':
         key_mng()
-        filename = input("Enter filename (one hash per line): ")
-        with open(filename) as multi_file:
-            for line in multi_file:
-                multi_check(apikey, line.strip())
-
-
-    else: print("\nChoice not recognized")
-
-    exit_script = input("\n\nExit now? [Y/n]")
-
+        for line in hashfile:
+            hashesorg_check(apikey, line.strip()) 
