@@ -21,8 +21,8 @@ def key_mng():
 
 def save_out(line):
     try:
-        with open(argus.output) as out_file:
-            out_file.write(line)
+        with open(argus.output, 'a') as out_file:
+            out_file.write(line + '\n')
     except TypeError:
         pass
 
