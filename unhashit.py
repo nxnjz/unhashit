@@ -5,6 +5,7 @@
 import os
 import requests
 import argparse
+from bs4 import BeautifulSoup
 
 
 def key_mng():
@@ -26,26 +27,43 @@ def save_out(line):
     except TypeError:
         pass
 
-def nitrxgen_check(md5hash):
-    apiurl = "http://www.nitrxgen.net/md5db/" + str(md5hash)
+def crackhashcom_check(hash_value):
+    if len(hash_value) == 32:
+        algo = 'MD5'
+    elif len(hash_value) == 40:
+        algo = 'SHA1'
+    else:
+        print(hash_value, "seems like an invalid hash for crackhash.com")
+    r = requests.post("http://crackhash.com", data = {'hash':hash_value, 'crack':'crack'})
+    soup = BeautifulSoup(r.text, "lxml")
+    try:
+        parsed = soup.th.center.string.split()
+        result = hash_value + ' : ' + parsed[len(parsed)-1] + ' : ' + algo
+    except AttributeError:
+        result = hash_value + ' : notfound'
+    print(result) 
+    save_out(result)
+
+def nitrxgen_check(hash_value):
+    apiurl = "http://www.nitrxgen.net/md5db/" + str(hash_value)
     r = requests.get(apiurl)
     if r.text != "":
-        result = md5hash + " : " + r.text + " : MD5"
+        result = hash_value + " : " + r.text + " : MD5"
     else:
-        result = md5hash + " : notfound"
+        result = hash_value + " : notfound"
     print(result)
     save_out(result)
 
-def hashesorg_check(apikey, multi_hash):
-    apiurl = "https://hashes.org/api.php?key=" + apikey + "&query=" + multi_hash
+def hashesorg_check(apikey, hash_value):
+    apiurl = "https://hashes.org/api.php?key=" + apikey + "&query=" + hash_value
     rr = requests.get(apiurl)
     if rr.json()['status'] == 'success':
         try:
-            plaintxt = rr.json()['result'][multi_hash]['plain']
-            algo = rr.json()['result'][multi_hash]['algorithm']
-            result = multi_hash + " : " + plaintxt + " : " + algo
+            plaintxt = rr.json()['result'][hash_value]['plain']
+            algo = rr.json()['result'][hash_value]['algorithm']
+            result = hash_value + " : " + plaintxt + " : " + algo
         except TypeError:
-            result = multi_hash + " : notfound"
+            result = hash_value + " : notfound"
         print(result)
         save_out(result)
     else:
@@ -53,7 +71,7 @@ def hashesorg_check(apikey, multi_hash):
 
 
 prsr = argparse.ArgumentParser(description="This script automates lookup of hashes by using the APIs on nitrxgen.net and hashes.org")
-prsr.add_argument('-a','--api',required=True,help='nitrxgen.net (MD5 only) or hashes.org')
+prsr.add_argument('-a','--api',required=True,help='nitrxgen.net (MD5 only)  OR  hashes.org (key required)  OR  crackhash.com (unreliable and slow due to parsing, MD5 and SHA1 only)')
 prsr.add_argument('-i','--input',required=True,help='List of hashes, one per line.')
 prsr.add_argument('-o','--output',help='Choose an output file if you want to save the results')
 prsr.add_argument('-k','--key',help='API key for hashes.org')
@@ -68,3 +86,6 @@ with open(argus.input) as hashfile:
         key_mng()
         for line in hashfile:
             hashesorg_check(apikey, line.strip()) 
+    elif argus.api == 'crackhash.com':
+        for line in hashfile:
+            crackhashcom_check(line.strip())
