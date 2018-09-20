@@ -67,7 +67,7 @@ def hashesorg_check(apikey, hash_value):
         print(result)
         save_out(result)
     else:
-        print("Error querying the hashes.org API, you may have overused it in a short period of time, or you key is invalid")
+        print("Error querying the hashes.org API, you may have overused it in a short period of time, or your key is invalid")
 
 
 prsr = argparse.ArgumentParser(description="This script automates lookup of hashes by using the APIs on nitrxgen.net and hashes.org, and parsing on crackhash.com")
