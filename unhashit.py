@@ -8,6 +8,7 @@ import argparse
 from bs4 import BeautifulSoup
 
 
+# Manage api keys for hashes.org
 def key_mng():
     global apikey
     try:
@@ -20,6 +21,8 @@ def key_mng():
         print("API key is required for hashes.org")
         exit()
 
+
+# Function to save each line of output to text file
 def save_out(line):
     try:
         with open(argus.output, 'a') as out_file:
@@ -27,6 +30,8 @@ def save_out(line):
     except TypeError:
         pass
 
+
+# Function to parse from crackhash.com
 def crackhashcom_check(hash_value):
     if len(hash_value) == 32:
         algo = 'MD5'
@@ -44,6 +49,8 @@ def crackhashcom_check(hash_value):
     print(result) 
     save_out(result)
 
+
+# Function to call the nitrxgen.net api
 def nitrxgen_check(hash_value):
     apiurl = "http://www.nitrxgen.net/md5db/" + str(hash_value)
     r = requests.get(apiurl)
@@ -54,6 +61,8 @@ def nitrxgen_check(hash_value):
     print(result)
     save_out(result)
 
+
+# Function to call the hashes.org api
 def hashesorg_check(apikey, hash_value):
     apiurl = "https://hashes.org/api.php?key=" + apikey + "&query=" + hash_value
     rr = requests.get(apiurl)
@@ -70,6 +79,7 @@ def hashesorg_check(apikey, hash_value):
         print("Error querying the hashes.org API, you may have overused it in a short period of time, or your key is invalid")
 
 
+# argument parsing
 prsr = argparse.ArgumentParser(description="This script automates lookup of hashes by using the APIs on nitrxgen.net and hashes.org, and parsing on crackhash.com")
 prsr.add_argument('-a','--api',required=True,help='nitrxgen.net (MD5 only)  OR  hashes.org (key required)  OR  crackhash.com (unreliable and slow due to parsing, MD5 and SHA1 only)')
 prsr.add_argument('-i','--input',required=True,help='List of hashes, one per line.')
@@ -78,6 +88,8 @@ prsr.add_argument('-k','--key',help='API key for hashes.org')
 
 argus = prsr.parse_args()
 
+
+# Open input file and check lines
 with open(argus.input) as hashfile:
     if argus.api == 'nitrxgen.net':
         for line in hashfile:
